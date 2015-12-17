@@ -3,7 +3,7 @@
 
 *****************************************************************/
 //#include "stm32f10x_type.h"
-#include <stm32f10x_lib.h>              /* STM32F10x Library Definitions      */
+#include "stm32f10x.h"              /* STM32F10x Library Definitions      */
 
 
 #ifndef _AT45SPIFLASH_H
@@ -25,7 +25,7 @@
 #define MM_PAGE_TO_B2_XFER 0x55				// ???¡Â¡ä?¡ä¡é?¡Â¦Ì????¡§¨°3¨ºy?Y?¨®??¦Ì?¦Ì¨²?t?o3???
 #define PAGE_ERASE 0x81						// ¨°3¨¦?3y¡ê¡§??¨°3512/528¡Á??¨²¡ê?
 #define SECTOR_ERASE 0x7C					// ¨¦¨¨??2¨¢3y¡ê¡§??¨¦¨¨??128K¡Á??¨²¡ê?
-#define READ_STATE_REGISTER 0xD7			// ?¨¢¨¨?¡Á¡ä¨¬???¡ä??¡Â
+#define READ_STATE_REGISTER 0x05//0xD7			// ?¨¢¨¨?¡Á¡ä¨¬???¡ä??¡Â
 #define READ_SEQUENCE 0xE8
 
 extern unsigned char DF_buffer[528];

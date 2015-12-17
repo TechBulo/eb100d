@@ -42,7 +42,7 @@ typedef	union __Union_system_para
         u8 para_ex_io_2_mode;
         u8 para_ex_io_3_mode;
         u8 para_ex_lens_vol_mode;
-        
+        u8 para_iris_ex_mode;
         u8 para_cam_block0[43];
         u8 para_cam_block1[15];
         u8 para_cam_block2[63];
@@ -54,7 +54,7 @@ typedef	union __Union_system_para
         u8 para_cam_block8[85];
 
     }system_para;
-    u8 system_para_arr[510];
+    u8 system_para_arr[511];
 }Union_system_para;
 #endif
 

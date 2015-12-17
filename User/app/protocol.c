@@ -677,7 +677,7 @@ static void PELCO_D_P_protocol_analysis_2(void)
                                         }
                                         break;
                                     case 1:
-                                        if((Rocket_fir_data == 254 )||(Rocket_fir_data == 255 ))
+                                        if((Rocket_fir_data == 254 ))
                                         {
                                             complex_cmd_flag = 2; //
                                             
@@ -685,6 +685,11 @@ static void PELCO_D_P_protocol_analysis_2(void)
                                         else if(Rocket_fir_data == 253)
                                         {
                                             complex_cmd = 1; //set default system parameter
+                                            complex_cmd_flag = 2;
+                                        }
+									    else if(Rocket_fir_data == 255)
+                                        {//ÉèÖÃID µØÖ·
+                                            complex_cmd = 2; //set domeid
                                             complex_cmd_flag = 2;
                                         }
                                         else if(Rocket_fir_data >= 205 && Rocket_fir_data<=208)
@@ -720,7 +725,7 @@ static void PELCO_D_P_protocol_analysis_2(void)
                                         }
                                         else
                                         {
-                                            if((Rocket_fir_data == 255 ))
+                                            if((complex_cmd == 2 ))
                                             {
                                                 domeNo = Rocket_fir_data_pre;
                                                 save_domeID(domeNo);

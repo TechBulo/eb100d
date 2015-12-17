@@ -18,8 +18,8 @@
 #include "bsp_spi_flash.h"
 
 /* Private typedef -----------------------------------------------------------*/
-//#define SPI_FLASH_PageSize      4096
-#define SPI_FLASH_PageSize      256
+#define SPI_FLASH_PageSize      256//4096
+//#define SPI_FLASH_PageSize      256
 #define SPI_FLASH_PerWritePageSize      256
 
 /* Private define ------------------------------------------------------------*/
@@ -31,6 +31,9 @@
 #define W25X_FastReadData		      0x0B 
 #define W25X_FastReadDual		      0x3B 
 #define W25X_PageProgram		      0x02 
+#define M25PE80_PE      0xdb             //Ò³²Á³ý
+#define M25PE80_PW      0x0a             //¨°3D¡ä
+
 #define W25X_BlockErase			      0xD8 
 #define W25X_SectorErase		      0x20 
 #define W25X_ChipErase			      0xC7 
@@ -109,7 +112,7 @@ void SPI_FLASH_Init(void)
   SPI_Cmd(SPI1, ENABLE);
 
   
-  spi_flash_test();
+  //spi_flash_test();
 
   
 }
@@ -141,6 +144,31 @@ void SPI_FLASH_SectorErase(u32 SectorAddr)
   /* Wait the end of Flash writing */
   SPI_FLASH_WaitForWriteEnd();
 }
+
+
+void SPI_FLASH_PageErase(u32 SectorAddr)
+{
+  /* Send write enable instruction */
+  SPI_FLASH_WriteEnable();
+  SPI_FLASH_WaitForWriteEnd();
+  /* Sector Erase */
+  /* Select the FLASH: Chip Select low */
+  SPI_FLASH_CS_LOW();
+  /* Send Sector Erase instruction */
+  SPI_FLASH_SendByte(W25X_SectorErase);
+  /* Send SectorAddr high nibble address byte */
+  SPI_FLASH_SendByte((SectorAddr & 0xFF0000) >> 16);
+  /* Send SectorAddr medium nibble address byte */
+  SPI_FLASH_SendByte((SectorAddr & 0xFF00) >> 8);
+  /* Send SectorAddr low nibble address byte */
+  SPI_FLASH_SendByte(SectorAddr & 0xFF);
+  /* Deselect the FLASH: Chip Select high */
+  SPI_FLASH_CS_HIGH();
+  /* Wait the end of Flash writing */
+  SPI_FLASH_WaitForWriteEnd();
+}
+
+
 
 /*******************************************************************************
 * Function Name  : SPI_FLASH_BulkErase
@@ -187,7 +215,7 @@ void SPI_FLASH_PageWrite(u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite)
   /* Select the FLASH: Chip Select low */
   SPI_FLASH_CS_LOW();
   /* Send "Write to Memory " instruction */
-  SPI_FLASH_SendByte(W25X_PageProgram);
+  SPI_FLASH_SendByte(M25PE80_PW);
   /* Send WriteAddr high nibble address byte to write to */
   SPI_FLASH_SendByte((WriteAddr & 0xFF0000) >> 16);
   /* Send WriteAddr medium nibble address byte to write to */
@@ -580,25 +608,30 @@ u8 eeprom_byte_read(u32 address)
 }
 
 
-u8 mytest[50];
-u8 mytest2[50];
+u8 mytest[400];
+u8 mytest2[400];
+u8 mytest3[400];
 
 void spi_flash_test(void)
 {
 
-	u8 i;
+	u16 i;
 
-	for(i=1;i<50;i++)
-		mytest[i-1] = i;
+	for(i=0;i<400;i++)
+		mytest[i] = 0xA6;
 	
-	SPI_FLASH_BufferWrite(mytest,10,50);
+	SPI_FLASH_BufferWrite(mytest,0,400);
 
-	SPI_FLASH_BufferRead(mytest2,10,50);
+	SPI_FLASH_BufferRead(mytest3,0,400);
+
+	for(i=0;i<400;i++)
+		mytest2[i] = 0x68;
 	
-	SPI_FLASH_BufferWrite(mytest,1,50);
+	SPI_FLASH_BufferWrite(mytest2,10,400);
 
-SPI_FLASH_BufferRead(mytest2,2,50);
+SPI_FLASH_BufferRead(mytest,10,400);
 
+	while(1);
 }
 
 /*********************************************END OF FILE**********************/

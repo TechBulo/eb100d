@@ -82,7 +82,9 @@ u8 get_syspara_from_eeporm(u8 mode)
     if(eeprom_byte_read(EEPROM_SYSTEM_PARA_FLAG_ADDRESS) != EEPROM_SYSTEM_PARA_FLAG_VAL)
         return 0;
 
-    if(eeprom_byte_read(len) != 0x12 || eeprom_byte_read(len+1) != 0x34)
+    //if(eeprom_byte_read(len) != 0x12 || eeprom_byte_read(len+1) != 0x34)
+        if(eeprom_byte_read(len+1) != 0x34)
+
         return 0;
 
 
@@ -90,6 +92,9 @@ u8 get_syspara_from_eeporm(u8 mode)
 	
     return 1;
 }
+
+
+Union_system_para system_para_com;
 
 u8 set_syspara_to_eeporm(u8 mode)
 {
@@ -106,21 +111,37 @@ u8 set_syspara_to_eeporm(u8 mode)
 
     len = (mode_tmp-1)*sizeof(system_para.system_para)+EEPROM_SYSTEM_PARA_START_ADDRESS;
 
-	SPI_FLASH_BufferWrite(system_para.system_para_arr,len,sizeof(system_para.system_para);
+	SPI_FLASH_BufferWrite(system_para.system_para_arr,len,sizeof(system_para.system_para));
 	
 	
-    for(i=0;i<sizeof(system_para.system_para);i++)
-    {
-        if(eeprom_byte_read(len+i) != system_para.system_para_arr[i])
-        {
-            eeprom_byte_write(len, 0);
-            break;
-        }
+    //for(i=0;i<sizeof(system_para.system_para);i++)
+    //{
+    //    if(eeprom_byte_read(len+i) != system_para.system_para_arr[i])
+    //    {
+    //        eeprom_byte_write(len, 0);
+    //        break;
+    //    }
 
-    }
+    //}
+
+	SPI_FLASH_BufferRead(system_para_com.system_para_arr,len,sizeof(system_para.system_para));
+
+//u16 ii;
+
+//	for(ii=0;ii<sizeof(system_para.system_para);ii++)
+//	{
+//		if(system_para_com.system_para_arr[ii] != system_para.system_para_arr[ii])
+//		{
+//			ii = 0xffff;
+//			break;
+//		}
+//	}
+//	
     eeprom_byte_write(EEPROM_SYSTEM_PARA_FLAG_ADDRESS, EEPROM_SYSTEM_PARA_FLAG_VAL);
     eeprom_byte_write(EEPROM_SYSTEM_PARA_FLAG_ADDRESS+1, mode_tmp);
-    
+
+	system_para_com.system_para_arr[0] = 0;
+	
     return 1;
 }
 
@@ -211,7 +232,8 @@ void load_system_para(void)
         set_cam_para_all();
         delay_X1ms(200);
         if(system_para.system_para.para_ex_io_1_mode > 4)
-            system_para.system_para.para_ex_io_1_mode = 1;
+            system_para.system_para.para_ex_io_1_mode = 1;
+
 
         if(system_para.system_para.para_ex_io_2_mode > 1)
             system_para.system_para.para_ex_io_2_mode = 1;
@@ -223,6 +245,7 @@ void load_system_para(void)
         extern_io3_output(system_para.system_para.para_ex_io_3_mode);
         motor_lens_voltage_set(system_para.system_para.para_ex_lens_vol_mode);
 
+		iris_ex_pin_set(system_para.system_para.para_iris_ex_mode);
 		shutter_threshold_get();
     }
     else
@@ -251,12 +274,15 @@ void load_system_para_by_mode(u8 mode)
             system_para.system_para.para_ex_io_3_mode = 1;
         
         if(system_para.system_para.para_ex_io_1_mode > 4)
-            system_para.system_para.para_ex_io_1_mode = 1;
+            system_para.system_para.para_ex_io_1_mode = 1;
+
 
         set_cam_para_all();
         extern_io_output(system_para.system_para.para_ex_io_1_mode-1);
         extern_io2_output(system_para.system_para.para_ex_io_2_mode);
         extern_io3_output(system_para.system_para.para_ex_io_3_mode);
+
+		iris_ex_pin_set(system_para.system_para.para_iris_ex_mode);
 
         motor_lens_voltage_set(system_para.system_para.para_ex_lens_vol_mode);
 		shutter_threshold_get();
@@ -387,6 +413,8 @@ void motor_lens_voltage_set(u8 mode)
 
 
 extern u8 iris_auto_manual_state;
+
+
 
 
 
@@ -614,6 +642,42 @@ void dome_func_control(uchar action,uchar prePoint)
     case 120:
         camera_sensor_format_set_with_long_key();
         break;
+    case 121:
+        camera_ntsc_pal_switch(0);
+        break;
+
+	case 122:
+        camera_hd_switch(0);
+        break;
+		
+	case 123:
+        camera_cvbs_switch(0);
+        break;
+
+	case 124:
+		if(action == 0x11)
+		{
+	        camera_power_off_on(1);
+		}
+		else
+		{
+	        camera_power_off_on(0);
+
+		}
+        break;
+
+	case 125:
+		if(action == 0x11)
+		{
+			iris_ex_pin_set(1);
+
+		}
+		else
+		{
+			iris_ex_pin_set(0);
+
+		}
+		break;
 	//case 124:
 	//case 125:
 	//case 126:

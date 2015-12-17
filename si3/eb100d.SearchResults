@@ -1,0 +1,5 @@
+---- camera_power_key_pin_Init Matches (2 in 1 files) ----
+Main.c (user\app):27
+void camera_power_key_pin_Init(void)
+Main.c (user\app):507
+	camera_power_key_pin_Init();

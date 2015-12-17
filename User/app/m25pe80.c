@@ -421,6 +421,12 @@ void DF_wait_busy(void)
 	{
 		
 		state_reg =  SPI_FLASH_ReadByte(0x00);
+
+			SPI_FLASH_SendByte(READ_STATE_REGISTER);
+	SPI_FLASH_SendByte(0x00);
+	SPI_FLASH_SendByte(0x00);                        
+	SPI_FLASH_SendByte(0x00);
+	
 	}
 	SPI_FLASH_CS_HIGH();
 }

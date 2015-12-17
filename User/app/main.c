@@ -32,6 +32,7 @@ void camera_power_key_pin_Init(void)
 
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 	
 	GPIOD_InitStructure.GPIO_Pin = CAMERA_SET_KEY_PIN;
     GPIOD_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
@@ -47,6 +48,21 @@ void camera_power_key_pin_Init(void)
     
 	GPIO_SetBits(CAMERA_SET_KEY_PORT,CAMERA_SET_KEY_PIN);	
 
+
+
+	PWR_BackupAccessCmd(ENABLE);//允许修改RTC 和后备寄存器
+	RCC_LSEConfig(RCC_LSE_OFF);//关闭外部低速外部时钟信号功能 后，PC13 PC14 PC15 才可以当普通IO用。
+	BKP_TamperPinCmd(DISABLE);//关闭入侵检测功能，也就是 PC13，也可以当普通IO 使用
+	PWR_BackupAccessCmd(DISABLE);//禁止修改后备寄存器
+
+	//RCC_LSICmd(DISABLE);
+	GPIOD_InitStructure.GPIO_Pin = GPIO_Pin_14|GPIO_Pin_15|GPIO_Pin_13;
+    GPIO_Init(GPIOC, &GPIOD_InitStructure);	
+	GPIO_SetBits(GPIOC,GPIO_Pin_14);	
+	GPIO_SetBits(GPIOC,GPIO_Pin_15);
+	GPIO_SetBits(GPIOC,GPIO_Pin_13);
+
+	
 }
 
 void camera_power_off_on(u8 mode)
@@ -67,6 +83,38 @@ void camera_sensor_format_set_with_long_key(void)
     GPIO_SetBits(CAMERA_SET_KEY_PORT,CAMERA_SET_KEY_PIN);
 
 }
+
+void camera_ntsc_pal_switch(u8 mode)
+{
+    camera_power_off_on(0);
+    delay_X1ms(3000);
+    GPIO_ResetBits(GPIOC,GPIO_Pin_14);	
+    camera_power_off_on(1);
+    delay_X1ms(9000);
+    GPIO_SetBits(GPIOC,GPIO_Pin_14);
+}
+
+void camera_hd_switch(u8 mode)
+{
+    camera_power_off_on(0);
+    delay_X1ms(3000);
+    GPIO_ResetBits(GPIOC,GPIO_Pin_13);	
+    camera_power_off_on(1);
+    delay_X1ms(9000);
+    GPIO_SetBits(GPIOC,GPIO_Pin_13);
+}
+
+void camera_cvbs_switch(u8 mode)
+{
+    camera_power_off_on(0);
+    delay_X1ms(3000);
+    GPIO_ResetBits(GPIOC,GPIO_Pin_15);	
+    camera_power_off_on(1);
+    delay_X1ms(9000);
+    GPIO_SetBits(GPIOC,GPIO_Pin_15);
+}
+
+
 
 void zoom_pin_Init(void)
 {
@@ -168,7 +216,7 @@ void motor_voltage_pin_Init(void)
 void camera_power_pin_Init(void)
 {
 	GPIO_InitTypeDef GPIOD_InitStructure;
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, ENABLE);
     
 	GPIOD_InitStructure.GPIO_Pin = GPIO_Pin_2;
     GPIOD_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
@@ -176,6 +224,8 @@ void camera_power_pin_Init(void)
     GPIO_Init(GPIOC, &GPIOD_InitStructure);	
 
 	GPIO_SetBits(GPIOC,GPIO_Pin_2);	
+
+	
 
 }
 
@@ -187,6 +237,45 @@ void camera_power_on_off(u8 mode)
         GPIO_ResetBits(GPIOC,GPIO_Pin_2);	   
 }
 
+void iris_ex_pin_Init(void)
+{
+	GPIO_InitTypeDef GPIOD_InitStructure;
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC|RCC_APB2Periph_GPIOB, ENABLE);
+    
+	GPIOD_InitStructure.GPIO_Pin = GPIO_Pin_5;
+    GPIOD_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIOD_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOC, &GPIOD_InitStructure);	
+
+	GPIO_SetBits(GPIOC,GPIO_Pin_5);	
+
+	GPIOD_InitStructure.GPIO_Pin = GPIO_Pin_0;
+    GPIO_Init(GPIOB, &GPIOD_InitStructure);	
+	GPIO_SetBits(GPIOB,GPIO_Pin_0);	
+}
+
+
+void iris_ex_pin_set(u8 mode)
+{
+	if(mode > 1)
+		return;
+
+	    system_para.system_para.para_iris_ex_mode = mode;
+
+	switch(mode)
+	{
+	case 1:
+		GPIO_SetBits(GPIOC,GPIO_Pin_5);	
+		GPIO_SetBits(GPIOB,GPIO_Pin_0);	
+		break;
+	case 0:
+		GPIO_ResetBits(GPIOC,GPIO_Pin_5);	
+		GPIO_ResetBits(GPIOB,GPIO_Pin_0);	
+		break;
+
+	}
+
+}
 
 void extern_function_pin_Init(void)
 {
@@ -420,7 +509,8 @@ void ports_initial(void)
     
 	timer0_initial();
 
-
+	iris_ex_pin_Init();
+	
 //调试UART4 PC10,PC11，暂时屏蔽按键功能 
 	//key_init();
 
@@ -433,8 +523,8 @@ void ports_initial(void)
 
 
 	SPI_FLASH_Init();
-
-    //an41908a_spi_pin_init();
+//spi_flash_init();
+    an41908a_spi_pin_init();
 	
 }
 
@@ -1798,6 +1888,8 @@ void iris_lens_pos_init(void)
 u32 ttlen,ttlens,FlashID;
 //#define VECT_TAB_RAM
 extern void delay1Ms(int ms);
+
+
 int main(void)
 {	
     u16 k;
@@ -1808,12 +1900,14 @@ int main(void)
 	system_para.system_para.para_system_para_flag1 = 0x12; 
 	system_para.system_para.para_system_para_flag2 = 0x34;
 
+//spi_flash_test();
+
 
 	/* Get SPI Flash ID */
-	FlashID = SPI_FLASH_ReadID();
+	//FlashID = SPI_FLASH_ReadID();
 
 	
-#if 1
+#if 0
     while(1)
     {
         LenDrvZoomMove(1,160);
@@ -1847,15 +1941,12 @@ int main(void)
 #if 1
     uart_to_camera_init(); 
 	delay_X1ms(600);
-    cam_get_ID(0);
-
-
+    //cam_get_ID(0);
 
 
     load_system_para();
-    cam_get_ID(0);
-	delay_X1ms(800);
-    cam_get_ID(0);
+    //cam_get_ID(0);
+    //cam_get_ID(0);
 	jiguang_comm_init();
 
 
