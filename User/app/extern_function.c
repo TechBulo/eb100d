@@ -67,6 +67,64 @@ void get_baudrate(void)
 }
 
 
+#if 1
+u8 get_syspara_from_eeporm(u8 mode)
+{
+    u16 i;
+    u16 len;
+    u8 mode_tmp;
+    
+    mode_tmp = mode;
+    if(!mode_tmp || mode_tmp > 16)
+        mode_tmp = 1;
+
+    len = (mode_tmp-1)*sizeof(system_para.system_para)+EEPROM_SYSTEM_PARA_START_ADDRESS;
+    if(eeprom_byte_read(EEPROM_SYSTEM_PARA_FLAG_ADDRESS) != EEPROM_SYSTEM_PARA_FLAG_VAL)
+        return 0;
+
+    if(eeprom_byte_read(len) != 0x12 || eeprom_byte_read(len+1) != 0x34)
+        return 0;
+
+
+	SPI_FLASH_BufferRead(system_para.system_para_arr,len,sizeof(system_para.system_para));
+	
+    return 1;
+}
+
+u8 set_syspara_to_eeporm(u8 mode)
+{
+    u16 i;
+    u16 len;
+
+    u8 mode_tmp;
+
+    mode_tmp = mode;
+    if(!mode_tmp || mode_tmp > 16)
+        mode_tmp = 1;
+    //len = sizeof(system_para.system_para_arr);
+
+
+    len = (mode_tmp-1)*sizeof(system_para.system_para)+EEPROM_SYSTEM_PARA_START_ADDRESS;
+
+	SPI_FLASH_BufferWrite(system_para.system_para_arr,len,sizeof(system_para.system_para);
+	
+	
+    for(i=0;i<sizeof(system_para.system_para);i++)
+    {
+        if(eeprom_byte_read(len+i) != system_para.system_para_arr[i])
+        {
+            eeprom_byte_write(len, 0);
+            break;
+        }
+
+    }
+    eeprom_byte_write(EEPROM_SYSTEM_PARA_FLAG_ADDRESS, EEPROM_SYSTEM_PARA_FLAG_VAL);
+    eeprom_byte_write(EEPROM_SYSTEM_PARA_FLAG_ADDRESS+1, mode_tmp);
+    
+    return 1;
+}
+
+#else
 u8 get_syspara_from_eeporm(u8 mode)
 {
     u16 i;
@@ -130,6 +188,8 @@ u8 set_syspara_to_eeporm(u8 mode)
     
     return 1;
 }
+#endif
+
 
 //开机时调用，进行初始化
 void load_system_para(void)

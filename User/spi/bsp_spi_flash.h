@@ -45,6 +45,7 @@ void SPI_FLASH_WaitForWriteEnd(void);
 void eeprom_byte_write(u32 address, u8 data);
 
 u8 eeprom_byte_read(u32 address);
+void spi_flash_test(void);
 
 
 #endif /* __SPI_FLASH_H */

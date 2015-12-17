@@ -107,6 +107,11 @@ void SPI_FLASH_Init(void)
 
   /* Enable SPI1  */
   SPI_Cmd(SPI1, ENABLE);
+
+  
+  spi_flash_test();
+
+  
 }
 /*******************************************************************************
 * Function Name  : SPI_FLASH_SectorErase
@@ -573,4 +578,27 @@ u8 eeprom_byte_read(u32 address)
 	SPI_FLASH_BufferRead(&data,address,1);
 	return data;
 }
+
+
+u8 mytest[50];
+u8 mytest2[50];
+
+void spi_flash_test(void)
+{
+
+	u8 i;
+
+	for(i=1;i<50;i++)
+		mytest[i-1] = i;
+	
+	SPI_FLASH_BufferWrite(mytest,10,50);
+
+	SPI_FLASH_BufferRead(mytest2,10,50);
+	
+	SPI_FLASH_BufferWrite(mytest,1,50);
+
+SPI_FLASH_BufferRead(mytest2,2,50);
+
+}
+
 /*********************************************END OF FILE**********************/
